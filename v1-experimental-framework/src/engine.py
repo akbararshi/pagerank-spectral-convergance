@@ -1,4 +1,4 @@
-def run_matrix_power_iteration(nodes_count, connection_graph, damping_coeff=0.85, max_loops=100, precision=1e-6):
+def run_matrix_power_iteration(nodes_count, connection_graph, damping_coeff=0.85, max_loops=2000, precision=1e-6):
     # Initialize the score vector with equal probability for each node
     vector_p = [1.0/nodes_count]*nodes_count
     # Pre-calculate the out-degree (link count) for each node that has outgoing links to optimize score distribution

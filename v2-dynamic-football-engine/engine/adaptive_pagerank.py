@@ -57,35 +57,4 @@ def sports_adaptive_pagerank(passing_matrix, player_names, max_loops = 100, vect
     return sorted_rankings, damping_coeff, graph_density
 
 
-#Sample Test Case for the Adaptive PageRank Engine
-if __name__ == "__main__":
-    # Test Data: A standard 4-player football passing diamond [CB, DM, CM, ST]
-    # Rows = Passed TO | Columns = Passed FROM
-    mock_football_matrix = [
-        [0.0,  5.0,  2.0,  1.0],  # Passes received TO Center-Back (CB)
-        [12.0, 0.0,  8.0,  3.0],  # Passes received TO Defensive-Midfield (DM)
-        [4.0,  15.0, 0.0,  5.0],  # Passes received TO Attacking-Midfield (CM)
-        [1.0,  2.0,  9.0,  0.0]   # Passes received TO Striker (ST)
-    ]
-    player_squad_names = ["Center-Back", "Def-Midfield", "Att-Midfield", "Striker"]
-    
-    try:
-        # Run your newly verified calculation loop
-        final_scores, applied_coeff, match_density = sports_adaptive_pagerank(
-            passing_matrix=mock_football_matrix,
-            player_names=player_squad_names,
-            max_loops=150,
-            vector_delta=1e-6
-        )
-        
-        print("\n🏆 TACTICAL PULSE ADAPTIVE ENGINE INITIALIZED SUCCESSFULLY!")
-        print("-" * 55)
-        print(f"Calculated Match Graph Density: {match_density:.3f}")
-        print(f"Automated Sigmoid Damping Vector Center: {applied_coeff:.4f}")
-        print("-" * 55)
-        print("Final Structural Squad Rankings:")
-        for rank, (player, score) in enumerate(final_scores.items(), 1):
-            print(f"  {rank}. {player:<15} │ Structural Weight Score: {score:.4f}")
-            
-    except Exception as e:
-        print(f"\n❌ Execution Terminal Crash Error: {str(e)}")
+
