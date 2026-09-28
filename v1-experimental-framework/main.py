@@ -8,8 +8,8 @@ def execute_experiments():
     metrics_output = {"spider_trap": {}, "star_graph": {}}
     
     # Establishing the number of nodes for each graph type to ensure consistent testing conditions across different damping coefficients
-    SPIDER_TRAP_NODES = 4
-    STAR_GRAPH_NODES = 6
+    SPIDER_TRAP_NODES = 500
+    STAR_GRAPH_NODES = 500
     
     print("--- RUNNING SPIDER TRAP SIMULATIONS ---")
     for alpha in alpha_variants:
