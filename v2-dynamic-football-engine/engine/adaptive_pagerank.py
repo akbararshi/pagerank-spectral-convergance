@@ -37,11 +37,9 @@ def sports_adaptive_pagerank(passing_matrix, player_names, max_loops = 100, vect
 
     v=np.ones(n)/n #uniform teleportation baseline
     r=np.copy(v) #initialize rank vector across the squad
+    scaled_transition_matrix = transition_matrix * player_prob_vector
     for cycle in range(max_loops):
-        r_next = np.zeros(n) #clear the scoreboard for the next cycle
-        for j in range(n):
-            r_next += r[j] * player_prob_vector[j] * transition_matrix[:,j]
-
+        r_next = np.dot(scaled_transition_matrix, r) # Calculate the next round of scores based on current rank vector
         remaining_teleportation = 1.0 -np.sum(r_next)
         r_next += remaining_teleportation * v #redistribute the remaining teleportation probability across all players
 

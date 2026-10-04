@@ -17,7 +17,7 @@ for graph in graph_types:
     # Extract values dynamically per sizing key
     for alpha in alphas:
         loops = [data[graph][str(size)][alpha] for size in sizes]
-        plt.plot(sizes, loops, marker='o', linewidth=2.5, label=f"α = {alpha}")
+        plt.plot(sizes, loops, marker='o', linewidth=2.5, label=f"alpha = {alpha}")
 
     # Apply professional, academic styling
     clean_title = graph.replace('_', ' ').title()
