@@ -69,7 +69,7 @@ Mapping these performance boundaries demonstrated that small networks require a 
 To resolve the boundary distortions and computational bottlenecks isolated in Phase 1, the **v2-dynamic-football-engine** replaces fixed variables with a dynamic, two-tier network optimization model.
 
 ### 1. The Macroscopic Sigmoid Governor
-Instead of utilizing an arbitrary, hardcoded damping constant (alpha = 0.85), the v2 engine reads the overall connectivity density of the passing network and automatically adjusts the baseline damping factor $/mathcal{D}_{\text{global}}$ using a custom logistic sigmoid curve:
+Instead of utilizing an arbitrary, hardcoded damping constant (alpha = 0.85), the v2 engine reads the overall connectivity density of the passing network and automatically adjusts the baseline damping factor ($\mathcal{D}_{\text{global}}$) using a custom logistic sigmoid curve:
 
 $$
 \mathcal{D}_{\text{global}} = 0.85 + \frac{0.13}{1 + \exp\left(-10 \cdot \left(\text{Density} - 0.45\right)\right)}
