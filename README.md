@@ -1,10 +1,10 @@
-# ⚽ PageRank Spectral Convergence: Adaptive Tactical Match Intelligence
+# PageRank Spectral Convergence: Adaptive Tactical Match Intelligence
 
 This repository documents a multi-phase computer science research pipeline, moving from an empirical scaling experiment (**v1-experimental-framework**) into a production-grade, API-driven visual intelligence server (**v2-dynamic-football-engine**). The platform optimizes Google's PageRank algorithm to evaluate structural influence within dynamic multi-agent passing networks, shifting away from rigid static parameters to calculate fluid, absolute volume-weighted network models natively in Python.
 
 ---
 
-## 📈 System Architectural Evolution (v1 vs v2)
+##  System Architectural Evolution (v1 vs v2)
 
 | Engineering Vector | v1 (The Experimental Framework) | v2 (The Live Automated Engine) |
 | :--- | :--- | :--- |
@@ -17,7 +17,7 @@ This repository documents a multi-phase computer science research pipeline, movi
 
 ---
 
-## 📂 Project Repository Schema
+## Project Repository Schema
 
 ```text
 pagerank-spectral-convergence/
