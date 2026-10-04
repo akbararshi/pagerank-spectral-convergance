@@ -71,7 +71,10 @@ To resolve the boundary distortions and computational bottlenecks isolated in Ph
 ### 1. The Macroscopic Sigmoid Governor
 Instead of utilizing an arbitrary, hardcoded damping constant (alpha = 0.85), the v2 engine reads the overall connectivity density of the passing network and automatically adjusts the baseline damping factor (\(\mathcal{D}_{\text{global}}\)) using a custom logistic sigmoid curve:
 
-\[\mathcal{D}_{\text{global}} = 0.85 + \frac{0.13}{1 + \exp\left(-10 \cdot \left(\text{Density} - 0.45\right)\right)}\]
+$$
+\mathcal{D}_{\text{global}} = 0.85 + \frac{0.13}{1 + \exp\left(-10 \cdot \left(\text{Density} - 0.45\right)\right)}
+$$
+
 
 This math ensures the algorithm adapts to the game state: it automatically dampens low-density vertical systems (like direct long-ball teams) to filter out noise, while scaling up to a ceiling of **0.98** for highly dense, technical possession systems to preserve passing signals.
 
@@ -80,7 +83,10 @@ Traditional PageRank yields relative percentage shares that add up to 1.0. This 
 
 To fix this sample-size distortion, the relative stationary distribution values (\(v_i\)) are scaled into an absolute evaluation matrix weighted by each individual player's outbound completed pass volume:
 
-\[\text{Weighted Score}_i = v_i \cdot (\text{Absolute Outbound Passes}_i)\]
+$$
+\text{Weighted Score}_i = v_i \cdot (\text{Absolute Outbound Passes}_i)
+$$
+
 
 This shifts the preference directly toward high-volume distribution anchors (like center-backs and defensive midfielders recycling possession) over isolated attacking destination nodes.
 
