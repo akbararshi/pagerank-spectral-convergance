@@ -35,7 +35,19 @@ HAS_CREDS = bool(os.environ.get("SB_USERNAME") and os.environ.get("SB_PASSWORD")
 
 from statsbombpy import sb  # noqa: E402  (must come after the credentials are in the environment)
 
-from engine.adaptive_pagerank import sports_adaptive_pagerank
+import sys
+import os
+
+# 1. Get the path to the engine directory and append it
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+
+# 2. Get the path to the parent directory (v2-dynamic-football-engine) and append it
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+# Now both imports will resolve perfectly on local and cloud servers
+from adaptive_pagerank import sports_adaptive_pagerank
 from data.fetcher import get_match_passing_matrix
 
 st.set_page_config(page_title="PageRank Match Intelligence", layout="wide", page_icon="⚽")
@@ -68,6 +80,17 @@ THEMES = {
         "shadow": "0 1px 2px rgba(90,70,20,.10)",
     },
 }
+
+BASE_CSS = """
+/* Force our surfaces + text colours so Streamlit's own dark/light theme can never leak through
+   (this is what made some text invisible in light mode: dark text on leftover dark widget backgrounds). */
+.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:var(--bg) !important}
+[data-testid="stSidebar"],[data-testid="stSidebar"]>div,[data-testid="stSidebarContent"],
+[data-testid="stSidebarUserContent"],[data-testid="stSidebarHeader"]{background-color:var(--surface) !important}
+[data-testid="stMain"] *,[data-testid="stSidebar"] *{color:var(--text)}
+[data-testid="stHeader"] *,[data-testid="stToolbar"] *{color:var(--muted)}
+* {scrollbar-color:var(--border) transparent}
+"""
 
 STATIC_CSS = """
 html,body,.stApp{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -170,12 +193,12 @@ div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="column"]{mi
 .tiles{grid-template-columns:repeat(auto-fit,minmax(84px,1fr))}
 
 /* buttons (theme switch, chat results) */
-.stButton>button{width:100%;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+.stButton button{width:100%;border-radius:10px;border:1px solid var(--border);background:var(--surface-2) !important;color:var(--text) !important;
   text-align:left;justify-content:flex-start;padding:.45rem .75rem;font-size:13px;line-height:1.3;
   transition:border-color .15s ease,transform .1s ease}
-.stButton>button p{color:var(--text);white-space:normal}
-.stButton>button:hover{border-color:var(--accent);color:var(--text)}
-.stButton>button:active{transform:scale(.98)}
+.stButton button p{color:var(--text);white-space:normal}
+.stButton button:hover{border-color:var(--accent);color:var(--text)}
+.stButton button:active{transform:scale(.98)}
 .st-key-theme_btn button{justify-content:center;text-align:center;font-weight:600;padding:.55rem .6rem}
 
 /* sidebar chat */
@@ -192,20 +215,121 @@ div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="column"]{mi
 [data-testid="stChatInput"] textarea{background:transparent;color:var(--text)}
 [data-testid="stChatInput"] textarea::placeholder{color:var(--muted)}
 
-/* inputs in the sidebar import form */
-.stDownloadButton>button{width:100%;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px}
-.stDownloadButton>button p{color:var(--text)}
-[data-testid="stFileUploaderDropzone"]{background:var(--surface-2);border:1px dashed var(--border);border-radius:12px}
-[data-testid="stFileUploaderDropzone"] *{color:var(--text)}
-[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--surface-2);border-radius:10px}
-[data-baseweb="input"]{border:1px solid var(--border)}
-[data-baseweb="input"] input,[data-baseweb="base-input"] input{color:var(--text);background:transparent}
-[data-testid="stNumberInput"] button{background:var(--surface-2);color:var(--text)}
+/* inputs: one themed surface, never black (every inner wrapper is transparent) */
+[data-baseweb="input"],[data-baseweb="base-input"],[data-baseweb="textarea"],
+[data-testid="stNumberInputContainer"],[data-baseweb="select"]>div{background-color:var(--surface-2) !important;border-radius:10px !important}
+[data-baseweb="input"],[data-baseweb="textarea"],[data-baseweb="select"]>div{border:1px solid var(--border) !important}
+[data-baseweb="input"]:focus-within,[data-baseweb="textarea"]:focus-within,[data-baseweb="select"]>div:focus-within{
+  border-color:var(--accent) !important;box-shadow:0 0 0 1px var(--accent) !important}
+[data-baseweb="input"] *,[data-baseweb="base-input"] *,[data-baseweb="textarea"] *,[data-baseweb="select"] input{
+  background-color:transparent !important;color:var(--text) !important}
+input,textarea{color:var(--text) !important;caret-color:var(--accent)}
+input::placeholder,textarea::placeholder{color:var(--muted) !important;opacity:1}
+input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px var(--surface-2) inset !important;-webkit-text-fill-color:var(--text) !important}
+[data-testid="stNumberInput"] button{background:transparent !important;color:var(--text) !important;border:none !important}
+[data-testid="stChatInput"]{background:var(--surface-2) !important;border:1px solid var(--border) !important;border-radius:14px !important}
+[data-testid="stChatInput"] *{background-color:transparent !important}
+[data-testid="stChatInput"]:focus-within{border-color:var(--accent) !important}
+[data-testid="stChatInput"] textarea{color:var(--text) !important}
+[data-testid="stChatInput"] button{color:var(--accent) !important}
+[data-testid="stFileUploaderDropzone"]{background:var(--surface-2) !important;border:1px dashed var(--border) !important;border-radius:12px !important}
+[data-testid="stFileUploaderDropzone"] *{color:var(--text) !important}
+[data-testid="stFileUploaderDropzone"] button{background:var(--surface) !important;border:1px solid var(--border) !important;border-radius:8px !important}
+[data-testid="stFileUploaderFile"] *{color:var(--text) !important}
+[data-baseweb="calendar"],[data-baseweb="calendar"] *{background-color:var(--surface) !important;color:var(--text) !important}
+[data-baseweb="calendar"] [aria-selected="true"]{background-color:var(--accent) !important;color:var(--on-accent) !important}
+button[data-baseweb="tab"] p{color:var(--muted)}
+button[data-baseweb="tab"][aria-selected="true"] p{color:var(--text)}
+[data-baseweb="tab-highlight"]{background-color:var(--accent) !important}
+[data-baseweb="tab-border"]{background-color:var(--border) !important}
+.stDownloadButton button{width:100%;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13px}
+.stDownloadButton button p{color:var(--text)}
+button[kind="primary"]{background:var(--accent) !important;border-color:var(--accent) !important}
+button[kind="primary"] p{color:var(--on-accent) !important;font-weight:600}
 
-@media (max-width:900px){
-  .xs,.bar{display:none}
+/* sidebar: wider, tidier, and an obvious "open" pill when it is collapsed */
+.block-container{padding-top:3.6rem !important}
+[data-testid="stSidebar"][aria-expanded="true"]{width:min(92vw,430px) !important;min-width:min(92vw,430px) !important;max-width:92vw !important}
+[data-testid="stSidebarContent"]{padding:1rem 1.1rem 2rem}
+.side-head{padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.side-title{font-size:19px;font-weight:800;margin:0}
+.side-sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 6px}
+[data-testid="stSidebarCollapseButton"] button{color:var(--text) !important}
+[data-testid="stSidebarCollapsedControl"],[data-testid="collapsedControl"]{
+  position:fixed;top:12px;left:12px;z-index:1000;display:flex;align-items:center;gap:6px;
+  background:var(--accent);border-radius:999px;padding:4px 14px 4px 6px;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);transition:transform .15s ease}
+[data-testid="stSidebarCollapsedControl"]:hover,[data-testid="collapsedControl"]:hover{transform:translateY(-1px) scale(1.03)}
+[data-testid="stSidebarCollapsedControl"] *,[data-testid="collapsedControl"] *{color:var(--on-accent) !important;fill:var(--on-accent) !important}
+[data-testid="stSidebarCollapsedControl"]::after,[data-testid="collapsedControl"]::after{
+  content:"Match finder";font-weight:700;font-size:13px;color:var(--on-accent)}
+
+/* tables adapt to the width of their own column (laptop with/without sidebar, phone) */
+.tbl-wrap{container-type:inline-size}
+@container (max-width:560px){.bar{display:none}}
+@container (max-width:470px){
+  .xs{display:none}
   .tbl{font-size:12px}
   .tbl td,.tbl th{padding:6px 7px}
+}
+
+/* native chrome that can keep Streamlit's own theme: force ours */
+[data-baseweb="popover"],[data-baseweb="popover"]>div,[data-baseweb="menu"],
+[data-testid="stMainMenuPopover"],[data-testid="stMainMenuPopover"] *{background-color:var(--surface) !important;color:var(--text) !important}
+[data-testid="stTooltipContent"],[data-testid="stTooltipContent"] *{background-color:var(--surface-2) !important;color:var(--text) !important}
+[data-testid="stExpander"] summary,[data-testid="stExpander"] details{background-color:transparent !important}
+[data-testid="stExpander"] summary:hover{background-color:var(--surface-2) !important}
+[data-testid="stExpander"] summary svg{color:var(--muted) !important;fill:var(--muted) !important}
+code{background-color:var(--surface-2) !important;color:var(--text) !important;border-radius:6px;padding:1px 6px}
+.stButton button:disabled{opacity:.5}
+/* image toolbar: one slim round button with a clean fullscreen icon (drawn with a mask, so no stray fills) */
+[data-testid="stElementToolbar"]{background:transparent !important;border:none !important;box-shadow:none !important}
+[data-testid="stElementToolbar"] button,[data-testid="stElementToolbarButton"]{
+  width:34px;height:34px;padding:0 !important;border-radius:10px !important;
+  background-color:var(--surface) !important;border:1px solid var(--border) !important;box-shadow:var(--shadow);
+  opacity:.92;transition:border-color .15s ease,opacity .15s ease}
+[data-testid="stElementToolbar"] button:hover{border-color:var(--accent) !important;opacity:1}
+[data-testid="stElementToolbar"] button svg{display:none !important}
+[data-testid="stElementToolbar"] button::before{
+  content:"";display:block;width:18px;height:18px;margin:auto;background-color:var(--text);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* one clean border per input: only the outer box has a border; the inner boxes are borderless */
+[data-baseweb="base-input"],[data-baseweb="input"] input,[data-baseweb="textarea"] textarea{
+  border:none !important;box-shadow:none !important;outline:none !important}
+[data-testid="stChatInput"] *{border:none !important;box-shadow:none !important;outline:none !important}
+
+/* match-finder form: full width, one clean input, square accent send button */
+[data-testid="stForm"]{border:none !important;padding:0 !important;background:transparent !important;width:100% !important}
+[data-testid="stForm"] div[data-testid="stHorizontalBlock"]{display:flex !important;flex-wrap:nowrap !important;
+  align-items:stretch !important;gap:.5rem !important;width:100% !important}
+[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="stColumn"]:first-child,
+[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="column"]:first-child{
+  flex:1 1 auto !important;min-width:0 !important;width:auto !important}
+[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="stColumn"]:last-child,
+[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="column"]:last-child{
+  flex:0 0 2.8rem !important;min-width:2.8rem !important;width:2.8rem !important}
+[data-testid="stForm"] [data-testid="stTextInput"],[data-testid="stForm"] [data-baseweb="input"]{width:100% !important}
+[data-testid="stForm"] [data-testid="stTextInput"] input{padding:0 .9rem;height:2.7rem;font-size:14.5px}
+[data-testid="stFormSubmitButton"],[data-testid="stFormSubmitButton"] button{width:100% !important}
+[data-testid="stFormSubmitButton"] button{background:var(--accent) !important;border:1px solid var(--accent) !important;
+  border-radius:10px !important;height:2.7rem;min-height:2.7rem;justify-content:center;padding:0 !important}
+[data-testid="stFormSubmitButton"] button p{color:var(--on-accent) !important;font-size:16px;font-weight:700}
+
+/* phone-only team switcher (desktop never sees it) */
+.st-key-m_team{display:none}
+@media (max-width:640px){
+  .st-key-m_team{display:block;margin:4px 0 10px}
+  .st-key-m_team [role="radiogroup"]{display:flex;gap:8px}
+  .st-key-m_team label{flex:1;justify-content:center;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:10px;padding:8px 10px;margin:0}
+  .st-key-m_team label>div:first-child{display:none}
+  .st-key-m_team label:has(input:checked){background:var(--accent);border-color:var(--accent)}
+  .st-key-m_team label:has(input:checked) *{color:var(--on-accent) !important}
+}
+@media (hover:none) and (pointer:coarse){
+  .stButton button,.stDownloadButton button{min-height:44px}
 }
 @media (max-width:640px){
   .tile .v{font-size:17px}.tile{padding:8px 9px}
@@ -218,7 +342,9 @@ div[data-testid="stHorizontalBlock"]:has(.keep-row)>div[data-testid="column"]{mi
 
 def build_css(theme: dict) -> str:
     variables = ";".join(f"--{k}:{v}" for k, v in theme.items())
-    return f"<style>:root{{{variables}}}{STATIC_CSS}{EXTRA_CSS}</style>"
+    scheme = "dark" if theme is THEMES["dark"] else "light"
+    variables = f"color-scheme:{scheme};" + variables
+    return f"<style>:root{{{variables}}}{BASE_CSS}{STATIC_CSS}{EXTRA_CSS}</style>"
 
 
 # Theme is read from session state BEFORE the toggle is drawn, so the first paint after a click is already correct.
@@ -878,6 +1004,11 @@ def merged_catalog(base: dict) -> dict:
     }
 
 
+def team_row():
+    """Marker for team A / team B rows: side by side on laptops, one team at a time on phones."""
+    st.markdown('<span class="keep-row team-row"></span>', unsafe_allow_html=True)
+
+
 # --- MATCH FINDER: sidebar chat that turns plain text into a match search ---
 STOP_WORDS = {
     "vs", "v", "versus", "against", "match", "matches", "game", "games", "the", "in", "of", "between", "and", "at",
@@ -1005,7 +1136,7 @@ def networks_row(match_id: int, teams: tuple, ok: tuple):
     cols = st.columns(2, gap="small")
     for col, squad in zip(cols, teams):
         with col:
-            keep_row()
+            team_row()
             if squad in ok:
                 st.image(network_png(match_id, squad, teams[0], teams[1]))
             else:
@@ -1052,11 +1183,28 @@ if "chat" not in st.session_state:
                 "Got a 2026 match? Use <b>➕ Add your own match</b> below.",
     }]
 
+def render_bubble(msg: dict):
+    if msg["role"] == "user":
+        st.markdown(f'<div class="chat"><div class="bubble u">{esc(msg["text"])}</div></div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="chat"><div class="bubble a">{msg["text"]}</div></div>', unsafe_allow_html=True)
+
+
 with st.sidebar:
-    st.markdown('<div class="side-title">💬 Match finder</div><div class="side-sub">Ask for any match in plain text.</div>',
-                unsafe_allow_html=True)
-    history = st.container()
-    prompt = st.chat_input("e.g. Spain vs Russia 2018")
+    st.markdown(
+        '<div class="side-head"><div class="side-title">💬 Match finder</div>'
+        '<div class="side-sub">Ask for any match in plain text, or add your own data below.</div></div>',
+        unsafe_allow_html=True,
+    )
+    history = st.container()  # filled at the end so messages from the import form show up immediately
+    with st.form("finder_form", clear_on_submit=True):
+        fc1, fc2 = st.columns([5, 1], gap="small")
+        with fc1:
+            keep_row()  # keep the box and the send button on one line, even on phones
+            query = st.text_input("Ask for a match", placeholder="e.g. Spain vs Russia 2018",
+                                  label_visibility="collapsed", key="finder_q")
+        sent = fc2.form_submit_button("➤")
+    prompt = query.strip() if (sent and query and query.strip()) else None
     if prompt:
         chat = st.session_state["chat"]
         chat.append({"role": "user", "text": prompt})
@@ -1065,32 +1213,23 @@ with st.sidebar:
         if reply["autopick"] and reply["ids"]:
             pick_match(by_id[reply["ids"][0]])
         del chat[:-14]  # keep the history short
-    with history:
-        chat = st.session_state["chat"]
-        for i, msg in enumerate(chat):
-            if msg["role"] == "user":
-                st.markdown(f'<div class="chat"><div class="bubble u">{esc(msg["text"])}</div></div>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<div class="chat"><div class="bubble a">{msg["text"]}</div></div>', unsafe_allow_html=True)
-                if i == len(chat) - 1 and not msg.get("autopick"):
-                    for mid in msg["ids"]:
-                        m = by_id.get(mid)
-                        if m:
-                            st.button(f"{m['home']} vs {m['away']} · {m['date']} · {_comp(m)}",
-                                      key=f"pick_{i}_{mid}", on_click=pick_match, args=(m,))
-    if len(st.session_state["chat"]) > 1 and st.button("Clear chat", key="clear_chat"):
-        del st.session_state["chat"]
-        st.rerun()
 
     # ---- Add your own match (2026 or any) ----
+    st.markdown('<div class="side-sec">Your own data</div>', unsafe_allow_html=True)
     with st.expander("➕ Add your own match (2026 or any)"):
         st.caption(
             "If a match isn't in the list (for example a 2026 game), bring your own data: a StatsBomb-format "
             "events JSON (score, formation and subs are read automatically) or a passes CSV."
         )
-        up = st.file_uploader("Upload events JSON or passes CSV", type=["json", "csv"], key="imp_file")
-        url = st.text_input("…or paste a link to an events JSON", placeholder="https://…/events/12345.json", key="imp_url")
-        st.download_button("⬇ CSV template", CSV_TEMPLATE, file_name="passes_template.csv", mime="text/csv", key="imp_tpl")
+        tab_up, tab_link = st.tabs(["Upload file", "Paste link"])
+        with tab_up:
+            up = st.file_uploader("Events JSON or passes CSV", type=["json", "csv"], key="imp_file",
+                                  label_visibility="collapsed")
+        with tab_link:
+            url = st.text_input("Link to an events JSON", placeholder="https://…/events/12345.json", key="imp_url",
+                                label_visibility="collapsed")
+        st.download_button("⬇ Download CSV template", CSV_TEMPLATE, file_name="passes_template.csv",
+                           mime="text/csv", key="imp_tpl")
 
         parsed = None
         try:
@@ -1102,24 +1241,30 @@ with st.sidebar:
             callout("err", esc(str(exc)))
 
         if parsed:
-            imp_home = st.selectbox("Home team", parsed["teams"], key="imp_home")
-            imp_away = st.selectbox("Away team", [t for t in parsed["teams"] if t != imp_home], key="imp_away")
-            imp_date = st.date_input("Match date", value=datetime.date.today(), key="imp_date")
-            imp_comp = st.text_input("Competition", value="Custom match", key="imp_comp")
+            st.markdown('<div class="side-sec" style="margin-top:12px">Match details</div>', unsafe_allow_html=True)
+            h1, h2 = st.columns(2)
+            imp_home = h1.selectbox("Home team", parsed["teams"], key="imp_home")
+            imp_away = h2.selectbox("Away team", [t for t in parsed["teams"] if t != imp_home], key="imp_away")
+            d1, d2 = st.columns(2)
+            imp_date = d1.date_input("Match date", value=datetime.date.today(), key="imp_date")
+            imp_comp = d2.text_input("Competition", value="Custom match", key="imp_comp")
             gh = ga = None
             if parsed["kind"] == "csv":  # a CSV has no goal events, so ask for the score (optional)
                 g1, g2 = st.columns(2)
                 gh = g1.number_input(f"{imp_home} goals", min_value=0, step=1, value=None, key="imp_gh")
                 ga = g2.number_input(f"{imp_away} goals", min_value=0, step=1, value=None, key="imp_ga")
-            if st.button("Add match", key="imp_add") and imp_away:
-                added = add_custom_match(parsed, imp_home, imp_away, imp_date.isoformat(), imp_comp.strip() or "Custom match", gh, ga)
+            if st.button("Add match", key="imp_add", type="primary") and imp_away:
+                added = add_custom_match(parsed, imp_home, imp_away, imp_date.isoformat(),
+                                         imp_comp.strip() or "Custom match", gh, ga)
                 pick_match(added)
                 catalog = merged_catalog(base_catalog)  # refresh before the filters below are built
                 matches_all = catalog["matches"]
                 by_id = {m["id"]: m for m in matches_all}
-                st.session_state["chat"].append({"role": "assistant", "ids": [], "autopick": True,
-                                                 "text": f"Added <b>{esc(added['home'])} vs {esc(added['away'])}</b> ({esc(added['date'])})."})
-                st.success("Match added and selected.")
+                st.session_state["chat"].append({
+                    "role": "assistant", "ids": [], "autopick": True,
+                    "text": f"Added <b>{esc(added['home'])} vs {esc(added['away'])}</b> ({esc(added['date'])}).",
+                })
+                callout("ok", "Match added and selected.")
 
         n_folder = len(scan_custom_dir())
         found = f" ({n_folder} found)" if n_folder else ""
@@ -1129,9 +1274,35 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-    if st.button("↻ Refresh match list", key="refresh_catalog", help="Re-check StatsBomb for newly released matches"):
+    # ---- Utilities ----
+    b1, b2 = st.columns(2)
+    clear_clicked = b1.button("🗑 Clear chat", key="clear_chat", disabled=len(st.session_state["chat"]) <= 1)
+    refresh_clicked = b2.button("↻ Refresh list", key="refresh_catalog", help="Re-check StatsBomb for newly released matches")
+    if clear_clicked:
+        del st.session_state["chat"]
+        st.rerun()
+    if refresh_clicked:
         load_catalog.clear()
         st.rerun()
+
+    # ---- Chat history (last few messages; older ones are tucked away) ----
+    chat = st.session_state["chat"]
+    older, recent = chat[:-4], chat[-4:]
+    with history:
+        if older:
+            with st.expander(f"Earlier messages ({len(older)})"):
+                for msg in older:
+                    render_bubble(msg)
+        for j, msg in enumerate(recent):
+            render_bubble(msg)
+            is_last = (len(older) + j) == len(chat) - 1
+            if is_last and msg["role"] == "assistant" and not msg.get("autopick"):
+                for mid in msg["ids"]:
+                    m = by_id.get(mid)
+                    if m:
+                        st.button(f"{m['home']} vs {m['away']} · {m['date']} · {_comp(m)}",
+                                  key=f"pick_{len(older) + j}_{mid}", on_click=pick_match, args=(m,))
+
 
 # ---- Main: manual filters ----
 with st.expander("🔍 Find a match", expanded=True):
@@ -1192,6 +1363,17 @@ else:
     score, home_sc, away_sc, has_pso = (info["scoreboard"] if info and info["scoreboard"] else (None, [], [], False))
     st.markdown(scoreboard_html(teams, score, home_sc, away_sc, has_pso), unsafe_allow_html=True)
 
+    # Phones: show one team at a time (full-width pitch + table). The switch is hidden on laptops.
+    st.radio("Team", [0, 1], format_func=lambda i: teams[i], horizontal=True, key="m_team", label_visibility="collapsed")
+    hide_nth = 2 if st.session_state.get("m_team", 0) == 0 else 1
+    st.markdown(
+        "<style>@media (max-width:640px){"
+        "div[data-testid='stHorizontalBlock']:has(.team-row)>div[data-testid='stColumn']:nth-child(%d),"
+        "div[data-testid='stHorizontalBlock']:has(.team-row)>div[data-testid='column']:nth-child(%d)"
+        "{display:none !important}}</style>" % (hide_nth, hide_nth),
+        unsafe_allow_html=True,
+    )
+
     # Compute both squads once up front (cached; everything below reuses the results)
     with st.spinner("Analyzing passing networks..."):
         analyses = {squad: analyze_team(match_id, squad) for squad in teams}
@@ -1202,7 +1384,7 @@ else:
     # Row 1: titles + stat tiles
     for col, squad in zip(st.columns(2, gap="small"), teams):
         with col:
-            keep_row()
+            team_row()
             tac = get_tactics(match_id, squad, teams[0], teams[1])
             badge = f'<span class="badge">{esc(tac["formation"])}</span>' if tac["formation"] else ""
             st.markdown(f'<div class="panel-title">🛡️ {esc(squad)} {badge}</div>', unsafe_allow_html=True)
@@ -1224,7 +1406,7 @@ else:
     st.markdown('<div class="section">Player metrics</div>', unsafe_allow_html=True)
     for col, squad in zip(st.columns(2, gap="small"), teams):
         with col:
-            keep_row()
+            team_row()
             a = analyses[squad]
             if a is None:
                 callout("warn", f"No completed passing data for {esc(squad)}.")
@@ -1245,7 +1427,7 @@ else:
     if flagged:
         for col, squad in zip(st.columns(2, gap="small"), teams):
             with col:
-                keep_row()
+                team_row()
                 if squad in flagged:
                     callout("warn", f"⚠️ <b>{esc(squad)} bottleneck:</b> {esc(flagged[squad])} — high influence, low outbound distribution.")
 
@@ -1255,7 +1437,6 @@ else:
         st.markdown('<div class="section">⭐ Elite performers</div>', unsafe_allow_html=True)
         for col, squad in zip(st.columns(2, gap="small"), teams):
             with col:
-                keep_row()
                 if squad in available:
                     name, sc, wsc = available[squad]["mvp"]
                     name = available[squad]["display"].get(name, name)
