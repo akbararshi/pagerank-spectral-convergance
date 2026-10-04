@@ -69,7 +69,7 @@ Mapping these performance boundaries demonstrated that small networks require a 
 To resolve the boundary distortions and computational bottlenecks isolated in Phase 1, the **v2-dynamic-football-engine** replaces fixed variables with a dynamic, two-tier network optimization model.
 
 ### 1. The Macroscopic Sigmoid Governor
-Instead of utilizing an arbitrary, hardcoded damping constant (alpha = 0.85), the v2 engine reads the overall connectivity density of the passing network and automatically adjusts the baseline damping factor (\(\mathcal{D}_{\text{global}}\)) using a custom logistic sigmoid curve:
+Instead of utilizing an arbitrary, hardcoded damping constant (alpha = 0.85), the v2 engine reads the overall connectivity density of the passing network and automatically adjusts the baseline damping factor $/mathcal{D}_{\text{global}}$ using a custom logistic sigmoid curve:
 
 $$
 \mathcal{D}_{\text{global}} = 0.85 + \frac{0.13}{1 + \exp\left(-10 \cdot \left(\text{Density} - 0.45\right)\right)}
@@ -81,7 +81,7 @@ This math ensures the algorithm adapts to the game state: it automatically dampe
 ### 2. Player-Specific Absolute Outbound Weighting
 Traditional PageRank yields relative percentage shares that add up to 1.0. This creates a severe distortion where a defender in a low-possession team can generate a higher relative rank score than a master playmaker in a high-volume team simply because their local network pool is smaller.
 
-To fix this sample-size distortion, the relative stationary distribution values (\(v_i\)) are scaled into an absolute evaluation matrix weighted by each individual player's outbound completed pass volume:
+To fix this sample-size distortion, the relative stationary distribution values $v_i$ are scaled into an absolute evaluation matrix weighted by each individual player's outbound completed pass volume:
 
 $$
 \text{Weighted Score}_i = v_i \cdot (\text{Absolute Outbound Passes}_i)
