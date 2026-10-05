@@ -2,6 +2,17 @@ import os
 
 os.environ.setdefault("MPLBACKEND", "Agg")  # must be set before ANY matplotlib import (macOS GUI backend crashes off the main thread)
 
+import sys
+from pathlib import Path
+
+# Streamlit puts only the script's own folder on sys.path. If this file lives inside engine/ (or any subfolder),
+# `from engine... import` / `from data... import` fail with ModuleNotFoundError. Add the app folder AND its parent
+# (the project root that contains the engine/ and data/ packages) so imports work in either layout.
+APP_DIR = Path(__file__).resolve().parent
+for _p in (APP_DIR, APP_DIR.parent):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
 import datetime
 import difflib
 import hashlib
@@ -35,19 +46,7 @@ HAS_CREDS = bool(os.environ.get("SB_USERNAME") and os.environ.get("SB_PASSWORD")
 
 from statsbombpy import sb  # noqa: E402  (must come after the credentials are in the environment)
 
-import sys
-import os
-
-# 1. Get the path to the engine directory and append it
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
-
-# 2. Get the path to the parent directory (v2-dynamic-football-engine) and append it
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
-
-# Now both imports will resolve perfectly on local and cloud servers
-from adaptive_pagerank import sports_adaptive_pagerank
+from engine.adaptive_pagerank import sports_adaptive_pagerank
 from data.fetcher import get_match_passing_matrix
 
 st.set_page_config(page_title="PageRank Match Intelligence", layout="wide", page_icon="⚽")
@@ -67,14 +66,14 @@ fragment = getattr(st, "fragment", None) or getattr(st, "experimental_fragment",
 THEMES = {
     "dark": {
         "bg": "#0b1220", "surface": "#121a2b", "surface-2": "#18233a", "border": "#24304a",
-        "text": "#e6edf8", "muted": "#8fa0bd", "accent": "#38bdf8", "on-accent": "#04121f", "gold": "#facc15",
+        "text": "#e6edf8", "muted": "#8fa0bd", "field": "#16213a", "field-border": "#33425f", "accent": "#38bdf8", "on-accent": "#04121f", "gold": "#facc15",
         "info-bg": "rgba(56,189,248,.10)", "warn-bg": "rgba(251,191,36,.12)",
         "ok-bg": "rgba(52,211,153,.12)", "err-bg": "rgba(248,113,113,.12)",
         "shadow": "0 1px 2px rgba(0,0,0,.35)",
     },
     "light": {
         "bg": "#f5eed9", "surface": "#fcf7e8", "surface-2": "#efe5c9", "border": "#e0d4b4",
-        "text": "#2a2417", "muted": "#7a6d52", "accent": "#0369a1", "on-accent": "#ffffff", "gold": "#d97706",
+        "text": "#2a2417", "muted": "#7a6d52", "field": "#fffdf5", "field-border": "#c9bb93", "accent": "#0369a1", "on-accent": "#ffffff", "gold": "#d97706",
         "info-bg": "rgba(2,132,199,.08)", "warn-bg": "rgba(245,158,11,.14)",
         "ok-bg": "rgba(5,150,105,.10)", "err-bg": "rgba(220,38,38,.08)",
         "shadow": "0 1px 2px rgba(90,70,20,.10)",
@@ -316,6 +315,30 @@ code{background-color:var(--surface-2) !important;color:var(--text) !important;b
 [data-testid="stFormSubmitButton"] button{background:var(--accent) !important;border:1px solid var(--accent) !important;
   border-radius:10px !important;height:2.7rem;min-height:2.7rem;justify-content:center;padding:0 !important}
 [data-testid="stFormSubmitButton"] button p{color:var(--on-accent) !important;font-size:16px;font-weight:700}
+
+/* inputs v2: ONE clearly visible field per widget. Every inner layer is transparent, so Streamlit's own
+   (dark) input backgrounds can't show through, whatever its internal structure is. */
+[data-testid="stTextInput"] div,[data-testid="stNumberInput"] div,[data-testid="stSelectbox"] div,[data-testid="stDateInput"] div,
+[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stDateInput"] input,[data-testid="stSelectbox"] input{
+  background-color:transparent !important;border:none !important;box-shadow:none !important}
+[data-testid="stTextInput"] [data-testid="stTextInputRootElement"],
+[data-testid="stNumberInput"] [data-testid="stNumberInputContainer"],
+[data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stDateInput"] [data-baseweb="input"]{
+  background-color:var(--field) !important;border:1px solid var(--field-border) !important;border-radius:10px !important;
+  min-height:42px;transition:border-color .15s ease,box-shadow .15s ease}
+[data-testid="stTextInput"] [data-testid="stTextInputRootElement"]:hover,
+[data-testid="stNumberInput"] [data-testid="stNumberInputContainer"]:hover,
+[data-testid="stSelectbox"] [data-baseweb="select"]:hover,
+[data-testid="stDateInput"] [data-baseweb="input"]:hover{border-color:var(--muted) !important}
+[data-testid="stTextInput"] [data-testid="stTextInputRootElement"]:focus-within,
+[data-testid="stNumberInput"] [data-testid="stNumberInputContainer"]:focus-within,
+[data-testid="stSelectbox"] [data-baseweb="select"]:focus-within,
+[data-testid="stDateInput"] [data-baseweb="input"]:focus-within{
+  border-color:var(--accent) !important;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent) !important}
+[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stDateInput"] input,
+[data-testid="stSelectbox"] [data-baseweb="select"] *{color:var(--text) !important}
+[data-testid="stSelectbox"] [data-baseweb="select"] svg{fill:var(--muted) !important;color:var(--muted) !important}
 
 /* phone-only team switcher (desktop never sees it) */
 .st-key-m_team{display:none}
@@ -813,7 +836,7 @@ def keep_row():
 # Supported: StatsBomb-format events JSON (full match: score, formation and substitutes are read automatically)
 # or a simple passes CSV with columns team, passer, recipient (optional: count, outcome).
 CUSTOM_ID_BASE = 900_000_000  # custom match ids live above any real StatsBomb id
-CUSTOM_DIR = os.environ.get("CUSTOM_MATCH_DIR", "custom_matches")
+CUSTOM_DIR = os.environ.get("CUSTOM_MATCH_DIR", str(APP_DIR / "custom_matches"))
 CSV_TEMPLATE = (
     "team,passer,recipient,count\n"
     "Home FC,Player A,Player B,12\n"
@@ -1269,7 +1292,7 @@ with st.sidebar:
         n_folder = len(scan_custom_dir())
         found = f" ({n_folder} found)" if n_folder else ""
         st.markdown(
-            f'<div class="note-s">Tip: drop .json / .csv files into <code>{esc(CUSTOM_DIR)}/</code> and they load '
+            f'<div class="note-s">Tip: drop .json / .csv files into <code>{esc(os.path.basename(CUSTOM_DIR.rstrip("/")))}/</code> and they load '
             f'automatically{found}. Name files like <code>2026-06-15_spain_uruguay.json</code> to set the date.</div>',
             unsafe_allow_html=True,
         )
