@@ -791,6 +791,14 @@ def network_png(match_id: int, squad: str, home: str, away: str, start_min: int 
     """Passing network on a vertical green pitch, limited to the selected time window."""
     a = analyze_team(match_id, squad, start_min, end_min, min_pass_per90)
     matrix, players, scores = a["matrix"], a["players"], a["scores"]
+    valid_indexes = []
+    for index, player in enumerate(players):
+        if not player or pd.isna(player) or str(player).lower().strip() in ("nan", "none", ""):
+            continue
+        valid_indexes.append(index)
+    matrix = matrix[np.ix_(valid_indexes, valid_indexes)]
+    players = [players[index] for index in valid_indexes]
+    scores = {player: scores[player] for player in players}
     n = len(players)
     mvp = a["mvp"][0]
 
@@ -830,6 +838,8 @@ def network_png(match_id: int, squad: str, home: str, away: str, start_min: int 
     ax.scatter(xs, ys, s=sizes, c="#0f172a", edgecolors=rings, linewidths=2, zorder=4)
 
     for p, x, y, s in zip(players, xs, ys, sizes):
+        if not p or pd.isna(p) or str(p).lower().strip() in ("nan", "none", ""):
+            continue
         shown = a["display"].get(p, p)
         label = shown.split()[-1] if shown.split() else shown
         ax.text(x, y - np.sqrt(s / np.pi) * (86 / (FIG_W * 72)) - 1.2, label, color="white", fontsize=7, weight="bold",

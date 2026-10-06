@@ -36,7 +36,7 @@ pagerank-spectral-convergence/
 │   ├── data/
 │   │   └── fetcher.py               # StatsBomb API ingestion layer and event log pipeline cleaner
 │   └── engine/
-│       ├── adaptive_pagerank.py     # Vectorized matrix calculus engine housing the Sigmoid Governor
+│       ├── adaptive_pagerank.py     # Vectorized linear algebra engine housing the Sigmoid Governor
 │       └── app.py                   # Responsive Streamlit analytical app with manual 2026 sandbox mode
 │
 ├── .gitignore                       # Environment tracking file to exclude python system cache artifacts
@@ -52,11 +52,13 @@ The **v1-experimental-framework** serves as the theoretical mathematical foundat
 
 Logging these simulation metrics into `data/experiment_results.json` surfaced a critical behavioral anomaly regarding high-damping factors:
 
+NOTE: This framework replaces the standard static damping factor (alpha = 0.85) with a dynamic global damping parameter ($\mathcal{D}_{\text{global}}$) calculated using our Sigmoid Governor engine.
+
 ### 1. The Small-Network Signal Flattening Problem
 Google’s standard damping factor (alpha = 0.85), while optimal for massive web crawling, introduces severe normalization distortions in smaller systems (like an 11-node team matrix). It flattens out mathematical variance, stripping key playmaker hubs of their true importance.
 
 ### 2. The High-Damping Structural Bottleneck
-To preserve localized network details, experiments were conducted by manually raising the variable close to its limit (alpha = 0.50 up to alpha = 0.99). While raising α = 0.99 successfully isolated hub significance, it introduced an exponential computational lag during power iterations. 
+To preserve localized network details, experiments were conducted by manually raising the variable close to its limit (alpha = 0.50 up to alpha = 0.99). While raising alpha = 0.99 successfully isolated hub significance, it introduced an exponential computational lag during power iterations. 
 
 Empirical testing exposed a **Graph Density Convergence Divergence**: inside a tight 1,000-node cyclic spider trap, the calculation was severely dragged out to **757 iteration loops** to reach stability. However, when scaled to 5,000 nodes, the sheer length of the linear distribution chain thinned out vector differentials, allowing the system to pass tolerance thresholds earlier at **597 iteration loops**.
 
