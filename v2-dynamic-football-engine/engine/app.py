@@ -46,7 +46,7 @@ HAS_CREDS = bool(os.environ.get("SB_USERNAME") and os.environ.get("SB_PASSWORD")
 
 from statsbombpy import sb  # noqa: E402  (must come after the credentials are in the environment)
 
-from engine.adaptive_pagerank import sports_adaptive_pagerank, system_dependency
+from adaptive_pagerank import sports_adaptive_pagerank, system_dependency
 from data.fetcher import get_match_passing_matrix
 
 st.set_page_config(page_title="PageRank Match Intelligence", layout="wide", page_icon="⚽")
