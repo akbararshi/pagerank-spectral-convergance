@@ -46,7 +46,7 @@ HAS_CREDS = bool(os.environ.get("SB_USERNAME") and os.environ.get("SB_PASSWORD")
 
 from statsbombpy import sb  # noqa: E402  (must come after the credentials are in the environment)
 
-from engine.adaptive_pagerank import sports_adaptive_pagerank
+from engine.adaptive_pagerank import sports_adaptive_pagerank, system_dependency
 from data.fetcher import get_match_passing_matrix
 
 st.set_page_config(page_title="PageRank Match Intelligence", layout="wide", page_icon="⚽")
@@ -340,6 +340,13 @@ code{background-color:var(--surface-2) !important;color:var(--text) !important;b
 [data-testid="stSelectbox"] [data-baseweb="select"] *{color:var(--text) !important}
 [data-testid="stSelectbox"] [data-baseweb="select"] svg{fill:var(--muted) !important;color:var(--muted) !important}
 
+/* dependency card */
+.dep{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:12px 14px;margin-top:10px}
+.dep .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.dep .nm{font-size:19px;font-weight:800;margin:2px 0 4px}
+.dep .sub{font-size:13px;line-height:1.4}
+.dep .sub2{font-size:12px;color:var(--muted);margin-top:4px}
+
 /* phone-only team switcher (desktop never sees it) */
 .st-key-m_team{display:none}
 @media (max-width:640px){
@@ -483,6 +490,22 @@ def get_display_names(match_id: int, squad: str) -> dict:
     return out
 
 
+def _total_efficiency(W: np.ndarray) -> float:
+    """Sum of 1/shortest-path-distance over all ordered pairs, with edge length = 1 / (passes between the pair).
+    Many passes = short distance. Reversing every edge gives the same total, so the pass-matrix orientation doesn't matter."""
+    n = len(W)
+    if n < 2:
+        return 0.0
+    D = np.full((n, n), np.inf)
+    pos = W > 0
+    D[pos] = 1.0 / W[pos]
+    np.fill_diagonal(D, 0.0)
+    for k in range(n):  # Floyd-Warshall (teams have ~11-16 players, so this is instant)
+        D = np.minimum(D, D[:, [k]] + D[[k], :])
+    off = ~np.eye(n, dtype=bool)
+    return float((1.0 / D[off]).sum())  # unreachable pairs (inf) contribute 0
+
+
 @st.cache_data(ttl=3600, show_spinner=False, max_entries=64)
 def analyze_team(match_id: int, squad: str):
     """All per-team math in one cached call; returns plain data or None."""
@@ -514,6 +537,12 @@ def analyze_team(match_id: int, squad: str):
     weighted = {p: scores[p] * float(passes_made[p_index[p]]) for p in players}
     rows_sorted = sorted(roster, key=lambda x: weighted[x[0]], reverse=True)
     mvp_name = max(players, key=lambda p: weighted[p])
+    most_dependent_player, max_network_loss, dependency_scores = system_dependency(matrix, players)
+    dependency = {
+        "most_dependent_player": most_dependent_player,
+        "max_network_loss": max_network_loss,
+        "dependency_scores": dependency_scores,
+    }
     return {
         "matrix": matrix,
         "players": players,
@@ -523,6 +552,7 @@ def analyze_team(match_id: int, squad: str):
         "total_passes": total_passes,
         "weighted": weighted,
         "mvp": (mvp_name, scores[mvp_name], weighted[mvp_name]),
+        "dependency": dependency,
         "display": disp,
         "density": density,
         "centralization": sum(top_score - s for _, s in roster) / denom,
@@ -823,6 +853,40 @@ def mvp_card_html(squad, name, score, weighted):
         f'<div class="nm">{esc(name)}</div>'
         f'<div class="inf">Weighted {weighted:.1f} · Influence {score * 100:.2f}%</div>'
         "</div></div>"
+    )
+
+
+def dependency_card_html(a: dict) -> str:
+    """Render the dependency results returned by engine.adaptive_pagerank."""
+    dependency = a.get("dependency") or {}
+    player = dependency.get("most_dependent_player")
+    loss = dependency.get("max_network_loss")
+    scores = dependency.get("dependency_scores") or {}
+    if not player or loss is None:
+        return ""
+
+    display_name = a["display"].get(player, player)
+    if isinstance(scores, dict):
+        ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    else:
+        ranked = sorted(
+            ((item.get("player"), item.get("loss", 0.0)) for item in scores),
+            key=lambda item: item[1], reverse=True,
+        )
+    next_players = " · ".join(
+        f'{esc(a["display"].get(name, name))} {score * 100:.1f}%'
+        for name, score in ranked
+        if name != player
+    )
+    next_players = " · ".join(next_players.split(" · ")[:2])
+    return (
+        '<div class="dep">'
+        '<div class="k">🔗 Most depended-on player</div>'
+        f'<div class="nm">{esc(display_name)}</div>'
+        f'<div class="sub">Removing this player reduces the team network connectivity by '
+        f'<b>{loss * 100:.1f}%</b>.</div>'
+        + (f'<div class="sub2">Next: {next_players}</div>' if next_players else "")
+        + "</div>"
     )
 
 
@@ -1436,9 +1500,15 @@ else:
                 continue
             table, note = table_html(a["rows"])
             st.markdown(f'<div class="mini-title">{esc(squad)}</div>{table}', unsafe_allow_html=True)
+            dep_html = dependency_card_html(a)
+            if dep_html:
+                st.markdown(dep_html, unsafe_allow_html=True)
             if note:
                 st.markdown(f'<div class="note-s">{note}</div>', unsafe_allow_html=True)
-    st.caption("Weighted = influence share × the player's own completed outbound passes. Rows are sorted by it.")
+    st.caption(
+        "Weighted = influence share × the player's own completed outbound passes (rows are sorted by it). "
+        "Dependency = drop in global passing-network efficiency when that player is removed (computed by the adaptive PageRank module)."
+    )
 
     # Row 4: bottleneck notes, below the networks and tables
     flagged = {}
